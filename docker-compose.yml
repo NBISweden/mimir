@@ -1,0 +1,108 @@
+version: "3"
+services:
+  client-dev:
+    profiles:
+      - dev
+    platform: linux/x86_64
+    command: "yarn run dev"
+    build:
+      context: ./mimir-ui
+      dockerfile: ./Dockerfile-dev
+      args:
+        SERVER_DOMAIN: ${SERVER_DOMAIN:-localhost:4567}
+    env_file:
+      - client.env
+    volumes:
+      - ./mimir-ui:/home/node/app
+      - exclude:/home/node/app/node_modules
+    networks:
+      - mimir-net
+    restart: always
+
+  client:
+    profiles:
+      - staging
+    platform: linux/x86_64
+    build:
+      context: ./mimir-ui
+      dockerfile: ./Dockerfile
+      args:
+        SERVER_DOMAIN: ${SERVER_DOMAIN:-mimir-test.nbis.se}
+    env_file:
+        - client.env
+    networks:
+      - mimir-net
+    restart: always
+
+  backend-wsgi-server:
+    profiles:
+      - dev
+      - staging
+    platform: linux/x86_64
+    build:
+      context: ./mimir-server
+      dockerfile: ./Dockerfile
+      target: wsgi-server
+    env_file:
+      - backend-wsgi-server.env
+    volumes:
+      - ./database:/app/database
+    ports:
+      - "127.0.0.1:${WSGI_PORT:-8000}:8000"
+    networks:
+      - mimir-net
+    restart: always
+
+  backend-web-server:
+    profiles:
+      - dev
+      - staging
+    platform: linux/x86_64
+    build:
+      context: ./mimir-server
+      dockerfile: ./Dockerfile
+    env_file:
+      - backend-web-server.env
+    ports:
+      - "127.0.0.1:${SERVER_PORT:-9000}:80"
+    networks:
+      - mimir-net
+    restart: always
+
+  nginx:
+    profiles:
+      - dev
+    image: nginx:1-alpine-slim
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    env_file:
+      - nginx-certbot.env
+    ports:
+      - 4567:80
+    networks:
+      - mimir-net
+    restart: always
+
+  nginx-certbot:
+    profiles:
+      - staging
+    image: jonasal/nginx-certbot:4-alpine
+    volumes:
+      - ./user_conf.d:/etc/nginx/user_conf.d
+      - nginx_secrets:/etc/letsencrypt
+    env_file:
+      - nginx-certbot.env
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - mimir-net
+    restart: always
+
+volumes:
+  nginx_secrets:
+  exclude:
+
+networks:
+  mimir-net:
+    driver: bridge
