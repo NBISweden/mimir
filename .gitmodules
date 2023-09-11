@@ -1,0 +1,6 @@
+[submodule "mimir-ui"]
+	path = mimir-ui
+	url = git@github.com:NBISweden/mimir-ui.git
+[submodule "mimir-server"]
+	path = mimir-server
+	url = git@github.com:NBISweden/mimir-server.git
