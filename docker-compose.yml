@@ -34,9 +34,28 @@ services:
       - mimir-net
     restart: always
 
-  backend-wsgi-server:
+  backend-dev:
     profiles:
       - dev
+    platform: linux/x86_64
+    entrypoint: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    build:
+      context: ./mimir-server
+      dockerfile: ./Dockerfile
+      target: wsgi-server
+    env_file:
+      - backend-wsgi-server.env
+    volumes:
+      - ./mimir-server:/app
+      - ./database:/app/database
+    ports:
+      - "127.0.0.1:${WSGI_PORT:-8000}:8000"
+    networks:
+      - mimir-net
+    restart: always
+
+  backend-wsgi-server:
+    profiles:
       - staging
     platform: linux/x86_64
     build:
@@ -55,7 +74,6 @@ services:
 
   backend-web-server:
     profiles:
-      - dev
       - staging
     platform: linux/x86_64
     build:
