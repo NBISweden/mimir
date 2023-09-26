@@ -23,11 +23,7 @@ services:
     profiles:
       - staging
     platform: linux/x86_64
-    build:
-      context: ./mimir-ui
-      dockerfile: ./Dockerfile
-      args:
-        SERVER_DOMAIN: ${SERVER_DOMAIN:-mimir-test.nbis.se}
+    image: ghcr.io/nbisweden/mimir-client:${TAG:-latest}
     env_file:
         - client.env
     networks:
@@ -58,10 +54,7 @@ services:
     profiles:
       - staging
     platform: linux/x86_64
-    build:
-      context: ./mimir-server
-      dockerfile: ./Dockerfile
-      target: wsgi-server
+    image: ghcr.io/nbisweden/mimir-backend-wsgi-server:${TAG:-latest}
     env_file:
       - backend-wsgi-server.env
     volumes:
@@ -76,9 +69,7 @@ services:
     profiles:
       - staging
     platform: linux/x86_64
-    build:
-      context: ./mimir-server
-      dockerfile: ./Dockerfile
+    image: ghcr.io/nbisweden/mimir-backend-web-server:${TAG:-latest}
     env_file:
       - backend-web-server.env
     ports:
